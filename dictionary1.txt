@@ -1,0 +1,6 @@
+a
+dictionary
+hello
+is
+this
+test
