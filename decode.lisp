@@ -128,7 +128,7 @@
 (defun success-rate(paragraph alphabet word-hashmap)
 	(let ((counter 0))
 		(loop for word in paragraph
-			do(if (spell-checker-1 (decipher word alphabet) word-hashmap)
+			do(if (or (spell-checker-1 (decipher word alphabet) word-hashmap) (equal word nil))
 				  (setq counter (+ counter 1))
 			)
 		)
@@ -141,8 +141,9 @@
 ; *Postcondition: Finds all permutations of the given list by list length,
 ; then returns a list that includes all permutations of the given list.
 (defun create-permutations(paragraph alphabet word-hashmap)
-	(let ((loop-bool t) (permutations (append alphabet nil)))
-		(loop for n from 1 to (factorial (length alphabet))
+	(let ((permutations (append alphabet nil)) (frequent-letters (analyze-frequency paragraph)))
+		(if (equal (length alphabet) 26)
+			(loop for n from 1 to (factorial (length alphabet))
 			do(let ((i (- (length alphabet) 1)) (j (- (length alphabet) 1)))
 				(loop while (>= (c2i (nth (- i 1) alphabet)) (c2i (nth i alphabet)))
 					do(if (equal (setq i (- i 1)) 0)
@@ -166,6 +167,30 @@
 				(setq alphabet (reverse-list alphabet i (- (length alphabet) 1)))
 			)
 		)
+		(loop for n from 1 to (factorial (length alphabet))
+			do(let ((i (- (length alphabet) 1)) (j (- (length alphabet) 1)))
+				(loop while (>= (c2i (nth (- i 1) alphabet)) (c2i (nth i alphabet)))
+					do(if (equal (setq i (- i 1)) 0)
+						(return )
+					)
+				)
+				(if (> i 0)
+					(loop while (and (> j i) (<= (c2i (nth j alphabet)) (c2i (nth (- i 1) alphabet))))
+						do(setq j (- j 1))
+					)
+				)
+				(if (equal (success-rate paragraph (add-frequent-letters frequent-letters alphabet) word-hashmap) (length paragraph))
+					(and (setq permutations (append (add-frequent-letters frequent-letters alphabet) nil)) (return ))
+					(if (< (success-rate paragraph (add-frequent-letters frequent-letters permutations) word-hashmap) (success-rate paragraph (append (add-frequent-letters frequent-letters alphabet) nil) word-hashmap))
+						(setq permutations (append (add-frequent-letters frequent-letters alphabet) nil))
+					)	
+				)
+				(if (> i 0)
+					(rotatef (nth (- i 1) alphabet) (nth j alphabet))
+				)
+				(setq alphabet (reverse-list alphabet i (- (length alphabet) 1)))
+			)
+		))
 		(decipher-paragraph paragraph permutations)
 	)	
 )
@@ -180,6 +205,78 @@
             )  
        ) 
 )
+
+; *Precondition: Takes a paragraph as input.
+;
+; *Postcondition: Calculates most frequent encoded six letters then
+; returns list of these letters according to frequency order.
+(defun analyze-frequency(paragraph)
+	(let ((frequent-letters (make-hash-table :test 'equal)) (unique-letters (list )))
+		(loop for word in paragraph
+			do(loop for letter in word
+				do(and (if (gethash letter frequent-letters)
+					(setf (gethash letter frequent-letters) (+ (gethash letter frequent-letters) 1))
+					(setf (gethash letter frequent-letters) 1))
+					(if (not (member letter unique-letters))
+						(setq unique-letters (append unique-letters (list letter)))
+					)
+				)
+			)
+		)
+		(sort-as-list frequent-letters unique-letters)
+	)
+)
+
+; *Precondition: Takes a hash table that has letters as key and frequency of these
+; letters as value, and these letters as a unique list.
+;
+; *Postcondition: Six most frequent letter as list.
+(defun sort-as-list(frequent-letters unique-letters)
+	(loop for i from 0 to (- (length unique-letters) 1)
+		do(let ((min-index i))
+			(loop for j from (+ i 1) to (- (length unique-letters) 1)
+				do(if (< (gethash (nth j unique-letters) frequent-letters) (gethash (nth min-index unique-letters) frequent-letters))
+					(setq min-index j)
+				)
+			)
+			(setq temp (nth min-index unique-letters))
+			(setf (nth min-index unique-letters) (nth i unique-letters))
+			(setf (nth i unique-letters) temp)	
+		)
+	)
+	(reverse (last unique-letters 6))
+)
+
+; *Precondition: Takes a list, an element to add list and its position to add.
+;
+; *Postcondition: Adds given elements to given indexes in the list.
+(defun insert-at (given-list index element)
+	(let ((retval nil))
+    	(loop for i from 0 to (- (length given-list) 1) 
+			do(when (= i index)
+        		(push element retval)
+			)
+      		(push (nth i given-list) retval)
+		)
+    	(when (>= index (length given-list))
+      		(push element retval))
+    	(nreverse retval)
+	)
+)
+
+; *Precondition: Takes a most frequent-letters list that includes most frequent 6 letters
+; in the paragraph and a 20 letters alphabet.
+;
+; *Postcondition: Adds most frequent letters to alphabet then returns alphabet.
+(defun add-frequent-letters(frequent-letters alphabet)
+	(setq alphabet (insert-at alphabet 0 (nth 2 frequent-letters)))
+	(setq alphabet (insert-at alphabet 4 (nth 0 frequent-letters)))
+	(setq alphabet (insert-at alphabet 8 (nth 4 frequent-letters)))
+	(setq alphabet (insert-at alphabet 13 (nth 5 frequent-letters)))
+	(setq alphabet (insert-at alphabet 14 (nth 3 frequent-letters)))
+	(setq alphabet (insert-at alphabet 19 (nth 1 frequent-letters)))
+	alphabet
+)
 ;; -----------------------------------------------------
 ;; DECODE FUNCTIONS
 
@@ -193,8 +290,14 @@
 	)
 )
 
-(defun Gen-Decoder-B-0 (paragraph)
-  	;you should implement this function
+(defun Gen-Decoder-B-0 (paragraph alphabet dictionary-file)
+  	(let ((dictionary (read-as-hashmap dictionary-file)) (string-paragraph ""))
+		(setq char-list (create-permutations paragraph alphabet dictionary))
+		(loop for word in char-list
+			do(setq string-paragraph (concatenate 'string string-paragraph (coerce word 'string) " "))
+		)
+		string-paragraph
+	)
 )
 
 (defun Gen-Decoder-B-1 (paragraph)
@@ -215,10 +318,10 @@
 	(let ((doc (read-as-list "document1.txt")) 
 		  (word '(#\f #\d #\a #\e #\b #\c #\h #\g)) 
 		  (word-list (read-as-word-list "dictionary2.txt"))
-		  (word-hashmap (read-as-hashmap "dictionary2.txt"))
+		  (word-hashmap (read-as-hashmap "dictionary1.txt"))
 		)
-		(setq alphabet '(#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z))	
-		(print (Gen-Decoder-A doc alphabet "dictionary2.txt"))	
+		(setq alphabet '(#\b #\c #\d #\f #\g #\h #\j #\k #\l #\m #\p #\q #\r #\s #\u #\v #\w #\x #\y #\z))	
+		(print (Gen-Decoder-B-0 doc alphabet "dictionary1.txt"))	
 	)
 	
 )
