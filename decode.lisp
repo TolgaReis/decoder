@@ -281,6 +281,10 @@
 ;; -----------------------------------------------------
 ;; DECODE FUNCTIONS
 
+; *Precondition: Takes a paragraph, alphabet and a dictionary-file name as argument.
+;
+; *Postcondition: Decodes ciphered paragraph with brute force method, then returns
+; deciphered paragraph.
 (defun Gen-Decoder-A (paragraph alphabet dictionary-file)
 	(let ((dictionary (read-as-hashmap (coerce dictionary-file 'string))) (string-paragraph ""))
 		(setq char-list (create-permutations paragraph alphabet dictionary))
@@ -291,6 +295,10 @@
 	)
 )
 
+; *Precondition: Takes a paragraph, alphabet and a dictionary-file name as argument.
+;
+; *Postcondition: Decodes ciphered paragraph with frequency-analysis method, then returns
+; deciphered paragraph.
 (defun Gen-Decoder-B-0 (paragraph alphabet dictionary-file)
   	(let ((dictionary (read-as-hashmap (coerce dictionary-file 'string))) (string-paragraph ""))
 		(setq char-list (create-permutations paragraph alphabet dictionary))
@@ -301,6 +309,10 @@
 	)
 )
 
+; *Precondition: Takes a paragraph, alphabet and a dictionary-file name as argument.
+;
+; *Postcondition: Decodes ciphered paragraph with frequency-analysis method, then returns
+; deciphered paragraph.
 (defun Gen-Decoder-B-1 (paragraph alphabet dictionary-file)
   	(let ((dictionary (read-as-hashmap (coerce dictionary-file 'string))) (string-paragraph ""))
 		(setq char-list (create-permutations paragraph alphabet dictionary))
@@ -311,6 +323,9 @@
 	)
 )
 
+; *Precondition: Takes a document, decoder function and a dictionary file name as argument.
+;
+; *Postcondition: Decodes paragraph according to given decoder function, then returns deciphered paragraph.
 (defun Code-Breaker (document decoder alphabet dictionary)
   	(let ((paragraph (read-as-list document))) 
 	  	(mapcar decoder (list paragraph) (list alphabet) (list dictionary))
