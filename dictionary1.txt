@@ -1,7 +1,6 @@
-eeeeeee
-tttttt
-aaaaa
-oooo
-iii
-nn
-w
+a
+dictionary
+hello
+is
+this
+test
