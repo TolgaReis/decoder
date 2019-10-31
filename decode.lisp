@@ -277,11 +277,16 @@
 	(setq alphabet (insert-at alphabet 19 (nth 1 frequent-letters)))
 	alphabet
 )
+
 ;; -----------------------------------------------------
 ;; DECODE FUNCTIONS
 
+; *Precondition: Takes a paragraph, alphabet and a dictionary-file name as argument.
+;
+; *Postcondition: Decodes ciphered paragraph with brute force method, then returns
+; deciphered paragraph.
 (defun Gen-Decoder-A (paragraph alphabet dictionary-file)
-	(let ((dictionary (read-as-hashmap dictionary-file)) (string-paragraph ""))
+	(let ((dictionary (read-as-hashmap (coerce dictionary-file 'string))) (string-paragraph ""))
 		(setq char-list (create-permutations paragraph alphabet dictionary))
 		(loop for word in char-list
 			do(setq string-paragraph (concatenate 'string string-paragraph (coerce word 'string) " "))
@@ -290,8 +295,12 @@
 	)
 )
 
+; *Precondition: Takes a paragraph, alphabet and a dictionary-file name as argument.
+;
+; *Postcondition: Decodes ciphered paragraph with frequency-analysis method, then returns
+; deciphered paragraph.
 (defun Gen-Decoder-B-0 (paragraph alphabet dictionary-file)
-  	(let ((dictionary (read-as-hashmap dictionary-file)) (string-paragraph ""))
+  	(let ((dictionary (read-as-hashmap (coerce dictionary-file 'string))) (string-paragraph ""))
 		(setq char-list (create-permutations paragraph alphabet dictionary))
 		(loop for word in char-list
 			do(setq string-paragraph (concatenate 'string string-paragraph (coerce word 'string) " "))
@@ -300,12 +309,27 @@
 	)
 )
 
-(defun Gen-Decoder-B-1 (paragraph)
-  	;you should implement this function
+; *Precondition: Takes a paragraph, alphabet and a dictionary-file name as argument.
+;
+; *Postcondition: Decodes ciphered paragraph with frequency-analysis method, then returns
+; deciphered paragraph.
+(defun Gen-Decoder-B-1 (paragraph alphabet dictionary-file)
+  	(let ((dictionary (read-as-hashmap (coerce dictionary-file 'string))) (string-paragraph ""))
+		(setq char-list (create-permutations paragraph alphabet dictionary))
+		(loop for word in char-list
+			do(setq string-paragraph (concatenate 'string string-paragraph (coerce word 'string) " "))
+		)
+		string-paragraph
+	)
 )
 
-(defun Code-Breaker (document decoder)
-  	;you should implement this function
+; *Precondition: Takes a document, decoder function and a dictionary file name as argument.
+;
+; *Postcondition: Decodes paragraph according to given decoder function, then returns deciphered paragraph.
+(defun Code-Breaker (document decoder alphabet dictionary)
+  	(let ((paragraph (read-as-list document))) 
+	  	(mapcar decoder (list paragraph) (list alphabet) (list dictionary))
+	)
 )
 
 ;; -----------------------------------------------------
@@ -315,13 +339,51 @@
 	(print "....................................................")
 	(print "Testing ....")
 	(print "....................................................")
-	(let ((doc (read-as-list "document1.txt")) 
-		  (word '(#\f #\d #\a #\e #\b #\c #\h #\g)) 
-		  (word-list (read-as-word-list "dictionary2.txt"))
-		  (word-hashmap (read-as-hashmap "dictionary1.txt"))
+	(let ((doc (read-as-list "document1.txt"))
+		  (semi-alphabet '(#\b #\c #\d #\f #\g #\h #\j #\k #\l #\m #\p #\q #\r #\s #\u #\v #\w #\x #\y #\z))
+		  (alphabet '(#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z)) 
+		  (dictionary "dictionary2.txt")
 		)
-		(setq alphabet '(#\b #\c #\d #\f #\g #\h #\j #\k #\l #\m #\p #\q #\r #\s #\u #\v #\w #\x #\y #\z))	
-		(print (Gen-Decoder-B-0 doc alphabet "dictionary1.txt"))	
+		(terpri )
+		(print "Cipher alphabet for paragraph given in document1.txt is: ")
+		(print '(#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\r #\q #\u #\t #\w #\x #\z #\v #\s #\y))
+		(terpri )
+		(print "Cipher alphabet for paragraph given in document2.txt is: ")
+		(print '(#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\s #\v #\x #\t #\y #\z #\w #\u #\r #\q))
+		(terpri )
+		(terpri )
+		(print "Which document dou you want to test?")
+		(print "Document name: ")
+		(setq doc (read))
+		(print "Which decoder do you want to test?")
+		(print "1. Gen-Decoder-A")
+		(print "2. Gen-Decoder-B-0")
+		(print "3. Gen-Decoder-B-1")
+		(print "Choice: ")
+		(setq choice (read))
+		(if (not (or (equal choice 1) (equal choice 2) (equal choice 3)))
+			(print "Invalid choice!")
+			(or (if (equal choice 1)
+					(and (print "Gen-Decoder-A is running...")
+						(print "Deciphered message: ")
+						(print (Code-Breaker doc #'Gen-Decoder-A alphabet (coerce dictionary 'list)))
+					)
+				)
+				(if (equal choice 2)
+					(and (print "Gen-Decoder-B-0 is running...")
+						(print "Deciphered message: ")
+						(print (Code-Breaker doc #'Gen-Decoder-B-0 semi-alphabet (coerce dictionary 'list)))
+					)
+				)
+				(if (equal choice 3)
+					(and (print "Gen-Decoder-B-1 is running...")
+						(print "Deciphered message: ")
+						(print (Code-Breaker doc #'Gen-Decoder-B-1 semi-alphabet (coerce dictionary 'list)))
+					)
+				)
+			
+			)
+		)	
 	)
 	
 )
