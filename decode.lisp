@@ -1,7 +1,6 @@
 ; *********************************************
-; *  341 Programming Languages                *
-; *  Fall 2019                                *
 ; *  Author: Tolga Reis                       *
+; *  Version: v1			      *
 ; *********************************************
 
 ;; utility functions 
